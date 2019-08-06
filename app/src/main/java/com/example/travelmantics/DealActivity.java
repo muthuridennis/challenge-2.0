@@ -15,8 +15,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.StorageReference;
@@ -115,13 +117,19 @@ public class DealActivity extends AppCompatActivity {
             ref.putFile(imageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    String url = ref.getDownloadUrl().toString();
-                    String pictureName = taskSnapshot.getStorage().getPath();
-                    deal.setImageUrl(url);
-                    deal.setImageName(pictureName);
-                    Log.d("Url: ", url);
-                    Log.d("Name", pictureName);
-                    showImage(url);
+                    final String pictureName = taskSnapshot.getStorage().getPath();
+
+                    taskSnapshot.getMetadata().getReference().getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> task) {
+                            String url = task.getResult().toString();
+                            deal.setImageUrl(url);
+                            deal.setImageName(pictureName);
+                            Log.d("Url: ", url);
+                            Log.d("Name", pictureName);
+                            showImage(url);
+                        }
+                    });
                 }
             });
 
